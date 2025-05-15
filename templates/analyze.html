@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analysis Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --danger: #ff7675;
+            --warning: #fdcb6e;
+            --success: #00b894;
+            --dark: #2d3436;
+            --darker: #1e2224;
+            --darkest: #121416;
+            --light: #dfe6e9;
+        }
+        
+        body {
+            background-color: var(--darkest);
+            color: var(--light);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #5d4aec 100%);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            padding: 2rem;
+            margin-bottom: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .analysis-card {
+            background: var(--darker);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .analysis-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        
+        .card-header {
+            background-color: var(--dark);
+            color: white;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .verdict-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+        
+        .verdict-safe {
+            background-color: var(--success);
+            color: #fff;
+        }
+        
+        .verdict-warning {
+            background-color: var(--warning);
+            color: #000;
+        }
+        
+        .verdict-danger {
+            background-color: var(--danger);
+            color: #fff;
+        }
+        
+        .verdict-secondary {
+            background-color: #6c757d;
+            color: #fff;
+        }
+        
+        .threat-level {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .threat-low {
+            background-color: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .threat-medium {
+            background-color: rgba(253, 203, 110, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .threat-high {
+            background-color: rgba(255, 118, 117, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .attachment-item {
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            background-color: rgba(255,255,255,0.03);
+            border-radius: 4px;
+            padding: 1rem;
+        }
+        
+        .malicious-attachment {
+            border-left: 4px solid var(--danger);
+            background-color: rgba(255, 118, 117, 0.1);
+        }
+        
+        .link-item {
+            word-break: break-all;
+            background-color: var(--dark);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--light);
+            transition: all 0.2s ease;
+        }
+        
+        .link-item:hover {
+            background-color: rgba(108, 92, 231, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .analysis-summary {
+            background: var(--darker);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .tab-content {
+            padding: 1.5rem;
+            background: var(--darker);
+            border-radius: 0 0 8px 8px;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--light);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            border-color: transparent;
+            color: var(--primary);
+        }
+        
+        .nav-tabs .nav-link.active {
+            font-weight: 600;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background: transparent;
+        }
+        
+        pre {
+            background: var(--dark);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary);
+            overflow-x: auto;
+            color: var(--light);
+            border: 1px solid rgba(255,255,255,0.05);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .hash-value {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            color: #a5b4c4;
+        }
+        
+        .alert {
+            border: 1px solid rgba(255,255,255,0.05);
+            font-weight: 500;
+        }
+        
+        .alert-danger {
+            background-color: rgba(255, 118, 117, 0.1);
+            border-color: rgba(255, 118, 117, 0.3);
+            color: var(--danger);
+        }
+        
+        .alert-info {
+            background-color: rgba(108, 92, 231, 0.1);
+            border-color: rgba(108, 92, 231, 0.3);
+            color: var(--primary);
+        }
+        
+        .alert-success {
+            background-color: rgba(0, 184, 148, 0.1);
+            border-color: rgba(0, 184, 148, 0.3);
+            color: var(--success);
+        }
+        
+        .alert-secondary {
+            background-color: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.05);
+            color: var(--light);
+        }
+        
+        .btn {
+            font-weight: 500;
+            letter-spacing: 0.025em;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: #5d4aec;
+            border-color: #5d4aec;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .text-muted {
+            color: #6c757d !important;
+        }
+        
+        .list-group-item {
+            background-color: var(--dark);
+            color: var(--light);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        a:hover {
+            color: #a29bfe;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .analysis-card, .analysis-summary, .tab-content {
+            animation: fadeIn 0.4s ease forwards;
+        }
+        
+        .analysis-summary { animation-delay: 0.1s; }
+        #analysisTabs { animation-delay: 0.2s; }
+        .tab-content { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="report-header text-center mb-4">
+            <h1><i class="fas fa-shield-alt me-2"></i> Email Security Analysis</h1>
+            <p class="mb-0">Detailed report generated on {{ now }}</p>
+        </div>
+        
+        {% if result.error %}
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Analysis Error</h4>
+                <p>{{ result.error }}</p>
+                {% if result.details %}
+                    <hr>
+                    <p class="mb-0">Details: {{ result.details }}</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="analysis-summary">
+                <h3 class="mb-4"><i class="fas fa-clipboard-list me-2"></i>Quick Summary</h3>
+                
+                <!-- Risk Rating Indicator -->
+                <div class="summary-item">
+                    <span>Threat Rating:</span>
+                    {% if result.risk_rating == "none" %}
+                        <span class="verdict-badge verdict-safe">
+                            <i class="fas fa-check-circle me-1"></i>No Risk
+                        </span>
+                    {% elif result.risk_rating == "medium" %}
+                        <span class="verdict-badge verdict-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Medium Risk
+                        </span>
+                    {% else %}
+                        <span class="verdict-badge verdict-danger">
+                            <i class="fas fa-radiation me-1"></i>High Risk
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Visual Risk Meter -->
+                <div class="risk-meter mt-3 mb-3">
+                    <div class="progress">
+                        <div class="progress-bar 
+                            {% if result.risk_rating == 'none' %}bg-success
+                            {% elif result.risk_rating == 'medium' %}bg-warning
+                            {% else %}bg-danger{% endif %}" 
+                            role="progressbar" 
+                            style="width: {% if result.risk_rating == 'none' %}25%
+                                        {% elif result.risk_rating == 'medium' %}60%
+                                        {% else %}100%{% endif %}"
+                            aria-valuenow="{% if result.risk_rating == 'none' %}25
+                                        {% elif result.risk_rating == 'medium' %}60
+                                        {% else %}100{% endif %}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">No Risk</small>
+                        <small class="text-muted">Medium</small>
+                        <small class="text-muted">High</small>
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Sender Address:</span>
+                    <strong>{{ result.from_address or 'Not available' }}</strong>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Sender Domain:</span>
+                    <strong>{{ result.domain or 'Not available' }}</strong>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Authentication:</span>
+                    <div>
+                        {% if result.spf_valid and result.dmarc_valid %}
+                            <span class="verdict-badge verdict-safe me-2">SPF <i class="fas fa-check"></i></span>
+                            <span class="verdict-badge verdict-safe">DMARC <i class="fas fa-check"></i></span>
+                        {% elif result.spf_valid or result.dmarc_valid %}
+                            {% if result.spf_valid %}
+                                <span class="verdict-badge verdict-safe me-2">SPF <i class="fas fa-check"></i></span>
+                                <span class="verdict-badge verdict-danger">DMARC <i class="fas fa-times"></i></span>
+                            {% else %}
+                                <span class="verdict-badge verdict-danger me-2">SPF <i class="fas fa-times"></i></span>
+                                <span class="verdict-badge verdict-safe">DMARC <i class="fas fa-check"></i></span>
+                            {% endif %}
+                        {% else %}
+                            <span class="verdict-badge verdict-danger">No Authentication</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <span>DMARC Policy:</span>
+                    {% if result.dmarc_policy %}
+                        {% if result.dmarc_valid %}
+                            <span class="verdict-badge verdict-safe">Valid <i class="fas fa-check"></i></span>
+                        {% else %}
+                            {% if result.dmarc_policy.lower() == "none" %}
+                                <span class="verdict-badge verdict-danger">None <i class="fas fa-times"></i></span>
+                            {% elif result.dmarc_policy.lower() == "quarantine" %}
+                                <span class="verdict-badge verdict-warning">Quarantine <i class="fas fa-exclamation"></i></span>
+                            {% elif result.dmarc_policy.lower() == "reject" %}
+                                <span class="verdict-badge verdict-safe">Reject <i class="fas fa-check"></i></span>
+                            {% else %}
+                                <span class="verdict-badge verdict-secondary">{{ result.dmarc_policy }}</span>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">Not available</span>
+                    {% endif %}
+                </div>
+                
+                <div class="summary-item">
+                    <span>Spoofing Detected:</span>
+                    {% if result.spoofed %}
+                        <span class="verdict-badge verdict-danger">Yes <i class="fas fa-exclamation-triangle"></i></span>
+                    {% else %}
+                        <span class="verdict-badge verdict-safe">No <i class="fas fa-check"></i></span>
+                    {% endif %}
+                </div>
+                
+                <div class="summary-item">
+                    <span>Urgency, Illegal word Indicator:</span>
+                    {% if result.urgent %}
+                        <span class="verdict-badge verdict-warning">Detected <i class="fas fa-exclamation"></i></span>
+                    {% else %}
+                        <span class="verdict-badge verdict-safe">None <i class="fas fa-check"></i></span>
+                    {% endif %}
+                </div>
+                
+                <div class="summary-item">
+                    <span>Attachments:</span>
+                    {% if result.attachments %}
+                        {% if result.malicious_files %}
+                            <span class="verdict-badge verdict-danger">{{ result.attachments|length }} ({{ result.malicious_files|length }} malicious)</span>
+                        {% else %}
+                            <span class="verdict-badge verdict-safe">{{ result.attachments|length }} <i class="fas fa-check"></i></span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">None</span>
+                    {% endif %}
+                </div>
+            </div> 
+            
+            <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab">Details</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="headers-tab" data-bs-toggle="tab" data-bs-target="#headers" type="button" role="tab">Headers</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="links-tab" data-bs-toggle="tab" data-bs-target="#links" type="button" role="tab">URL</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="attachments-tab" data-bs-toggle="tab" data-bs-target="#attachments" type="button" role="tab">Attachments</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab">Email Content</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="analysisTabsContent">
+                <div class="tab-pane fade show active" id="details" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="analysis-card">
+                                <div class="card-header">
+                                    <i class="fas fa-user-shield me-2"></i>Sender Authentication
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h5>SPF Validation</h5>
+                                        <p>
+                                            {% if result.spf_valid %}
+                                                <span class="verdict-badge verdict-safe">Valid <i class="fas fa-check"></i></span>
+                                            {% else %}
+                                                <span class="verdict-badge verdict-danger">Invalid <i class="fas fa-times"></i></span>
+                                            {% endif %}
+                                        </p>
+                                        {% if result.spf_header %}
+                                            <small class="text-muted">Domain: {{ result.spf_domain or 'Not specified' }}</small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h5>DMARC Validation</h5>
+                                        <p>
+                                            {% if result.dmarc_valid %}
+                                                <span class="verdict-badge verdict-safe">Valid <i class="fas fa-check"></i></span>
+                                            {% else %}
+                                                <span class="verdict-badge verdict-danger">Invalid <i class="fas fa-times"></i></span>
+                                            {% endif %}
+                                        </p>
+                                        {% if result.dmarc_header %}
+                                            <small class="text-muted">Result: {{ result.dmarc_header }}</small><br>
+                                        {% endif %}
+                                        {% if result.dmarc_policy %}
+                                            <small class="text-muted">Policy: 
+                                                {% if result.dmarc_policy.lower() == "none" %}
+                                                    None (no policy)
+                                                {% elif result.dmarc_policy.lower() == "quarantine" %}
+                                                    Quarantine suspicious emails
+                                                {% elif result.dmarc_policy.lower() == "reject" %}
+                                                    Reject suspicious emails
+                                                {% else %}
+                                                    {{ result.dmarc_policy }}
+                                                {% endif %}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div>
+                                        <h5>Domain Verification</h5>
+                                        <p>
+                                            {% if result.domain_valid %}
+                                                <span class="verdict-badge verdict-safe">Valid <i class="fas fa-check"></i></span>
+                                            {% else %}
+                                                <span class="verdict-badge verdict-danger">Invalid <i class="fas fa-times"></i></span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="analysis-card">
+                                <div class="card-header">
+                                    <i class="fas fa-flag me-2"></i>Threat Indicators
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h5>Spoofing Detection</h5>
+                                        <p>
+                                            {% if result.spoofed %}
+                                                <span class="verdict-badge verdict-danger">Detected <i class="fas fa-exclamation-triangle"></i></span>
+                                            {% else %}
+                                                <span class="verdict-badge verdict-safe">Not Detected <i class="fas fa-check"></i></span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h5>Illegal Word Indicators</h5>
+                                        <p>
+                                            {% if result.urgent %}
+                                                <span class="verdict-badge verdict-warning">Detected <i class="fas fa-exclamation"></i></span>
+                                                <p class="mt-2 text-muted">This email contains urgency or illegal word which is common in phishing attempts.</p>
+                                            {% else %}
+                                                <span class="verdict-badge verdict-safe">Not Detected <i class="fas fa-check"></i></span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    
+                                    <div>
+                                        <h5>Known Phishing Domains</h5>
+                                        <p>
+                                            {% if result.domain and result.domain.lower() in ["paypal-secure.com", "login-paypal.com", "verify-paypal.net"] %}
+                                                <span class="verdict-badge verdict-danger">Blacklisted <i class="fas fa-ban"></i></span>
+                                            {% else %}
+                                                <span class="verdict-badge verdict-safe">Not Blacklisted <i class="fas fa-check"></i></span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="headers" role="tabpanel">
+                    <div class="analysis-card">
+                        <div class="card-body">
+                            <h4 class="mb-3"><i class="fas fa-envelope me-2"></i>Email Headers</h4>
+                            
+                            <div class="mb-4">
+                                <h5>From Address</h5>
+                                <pre>{{ result.from_address or 'Not available' }}</pre>
+                            </div>
+                            
+                            {% if result.spf_header %}
+                            <div class="mb-4">
+                                <h5>SPF Header</h5>
+                                <pre>{{ result.spf_header }}</pre>
+                            </div>
+                            {% endif %}
+                            
+                            {% if result.dmarc_header %}
+                            <div class="mb-4">
+                                <h5>DMARC Header</h5>
+                                <pre>dmarc={{ result.dmarc_header }}</pre>
+                                {% if result.dmarc_valid %}
+                                    <div class="alert alert-success mt-2">
+                                        <i class="fas fa-check-circle me-2"></i>DMARC validation passed
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-danger mt-2">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>DMARC validation failed
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if result.sender_ip %}
+                            <div class="mb-4">
+                                <h5>Sender IP</h5>
+                                <pre>{{ result.sender_ip }}</pre>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="links" role="tabpanel">
+                    <div class="analysis-card">
+                        <div class="card-body">
+                            <h4 class="mb-3"><i class="fas fa-link me-2"></i>Extracted Links</h4>
+                            
+                            {% if result.extracted_links %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>Always verify links before clicking, even if they appear safe.
+                                </div>
+                                
+                                <ul class="list-group">
+                                    {% for link in result.extracted_links %}
+                                    <li class="list-group-item link-item 
+                                        {% if link.insecure %}list-group-item-warning
+                                        {% elif link.suspicious_domain or link.malicious_extension %}list-group-item-danger
+                                        {% endif %}">
+                                        <i class="fas fa-external-link-alt me-2"></i>
+                                        <span class="link-text">{{ link.url }}</span>
+                                        <button class="btn btn-sm btn-outline-secondary copy-btn ms-2" onclick="copyToClipboard('{{ link.url }}')" title="Copy to Clipboard">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <div class="float-end">
+                                            {% if link.insecure %}
+                                                <span class="badge bg-danger me-1">
+                                                    <i class="fas fa-lock-open me-1"></i>Insecure HTTP
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success me-1">
+                                                    <i class="fas fa-lock me-1"></i>HTTPS
+                                                </span>
+                                            {% endif %}
+                                            {% if link.suspicious_domain %}
+                                                <span class="badge bg-danger me-1">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Suspicious Domain
+                                                </span>
+                                            {% endif %}
+                                            {% if link.malicious_extension %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-virus me-1"></i>Malicious URL
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                
+                                {% if result.extracted_links|selectattr("insecure")|list or result.extracted_links|selectattr("suspicious_domain")|list or result.extracted_links|selectattr("malicious_extension")|list %}
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Warning:</strong> This email contains links that may pose security risks:
+                                    {% if result.extracted_links|selectattr("insecure")|list %}
+                                        - Insecure HTTP links (not encrypted, vulnerable to interception).
+                                    {% endif %}
+                                    {% if result.extracted_links|selectattr("suspicious_domain")|list %}
+                                        - Links to suspicious domains (potential phishing or malicious sites).
+                                    {% endif %}
+                                    {% if result.extracted_links|selectattr("malicious_extension")|list %}
+                                        - Links to files with potentially malicious extensions (e.g., .exe, .zip).
+                                    {% endif %}
+                                    Exercise extreme caution before interacting with these links.
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-secondary">
+                                    No links were found in this email.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="attachments" role="tabpanel">
+                    <div class="analysis-card">
+                        <div class="card-body">
+                            <h4 class="mb-3"><i class="fas fa-paperclip me-2"></i>Email Attachments</h4>
+                            
+                            {% if result.attachments_error %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    {{ result.attachments_error }}
+                                </div>
+                            {% elif result.attachments %}
+                                {% if result.malicious_files %}
+                                <div class="alert alert-danger">
+                                    <h5><i class="fas fa-radiation me-2"></i>Malicious Attachments Detected</h5>
+                                    <p>Do not open these files! They have been flagged by antivirus engines.</p>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="row">
+                                    {% for attachment in result.attachments %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="attachment-item {% if attachment.malicious_score and attachment.malicious_score > 0 %}malicious-attachment{% endif %}">
+                                            <h5>
+                                                <i class="fas {% if attachment.filename.lower().endswith('.exe') %}fa-file-code{% else %}fa-file{% endif %} me-2"></i>
+                                                {{ attachment.filename }}
+                                            </h5>
+                                            
+                                            <div class="mb-2">
+                                                <span class="hash-value">{{ attachment.sha256_hash }}</span>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <strong>VirusTotal Score:</strong>
+                                                    {% if attachment.malicious_score == "Error fetching from VT" %}
+                                                        <span class="text-muted">Not available</span>
+                                                    {% else %}
+                                                        {{ attachment.malicious_score }} / 70+
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div>
+                                                    {% if attachment.malicious_score == "Error fetching from VT" %}
+                                                        <span class="threat-level threat-medium">Unknown</span>
+                                                    {% elif attachment.malicious_score == 0 %}
+                                                        <span class="threat-level threat-low">Safe</span>
+                                                    {% elif attachment.malicious_score > 0 and attachment.malicious_score <= 10 %}
+                                                        <span class="threat-level threat-medium">Suspicious</span>
+                                                    {% elif attachment.malicious_score > 10 %}
+                                                        <span class="threat-level threat-high">Malicious</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-secondary">
+                                    No attachments were found in this email.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="content" role="tabpanel">
+                    <div class="analysis-card">
+                        <div class="card-body">
+                            <h4 class="mb-3"><i class="fas fa-envelope-open-text me-2"></i>Email Content</h4>
+                            
+                            {% if result.email_body %}
+                                <div class="email-content-container">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        This is the extracted text content from the email. Formatting may be simplified.
+                                    </div>
+                                    
+                                    <!-- Display the email body with preserved line breaks -->
+                                    <div class="email-body-content">
+                                        {{ result.email_body|replace('\n', '<br>')|safe }}
+                                    </div>
+                                    
+                                    <!-- Analysis of content -->
+                                    <div class="content-analysis mt-4">
+                                        <h5><i class="fas fa-search me-2"></i>Content Analysis</h5>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="analysis-stat">
+                                                    <span class="stat-label">Word Count:</span>
+                                                    <span class="stat-value">{{ result.email_body.split()|length }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="analysis-stat">
+                                                    <span class="stat-label">Character Count:</span>
+                                                    <span class="stat-value">{{ result.email_body|length }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if result.urgent %}
+                                        <div class="alert alert-warning mt-3">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <strong>Urgency Detected:</strong> This email contains language that creates a sense of urgency,
+                                            which is a common tactic in phishing attempts.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-secondary">
+                                    No text content could be extracted from this email.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                    <a href="{{ url_for('url') }}" class="btn btn-outline-info">
+                        <i class="fas fa-link me-2"></i>Scan URL
+                    </a>
+                </div>
+                <a href="{{ url_for('download_file', filename=filename) }}" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i>Download Full Report
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Activate tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy link.');
+            });
+        }
+    </script>
+</body>
+</html>

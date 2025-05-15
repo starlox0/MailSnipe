@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URL Scanner</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #bb86fc;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #bb86fc;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #2d2d2d;
+            color: #ffffff;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3700b3;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #6200ee;
+        }
+        .home-button {
+            background-color: #03dac6;
+            color: #000000;
+            margin-top: 20px;
+        }
+        .home-button:hover {
+            background-color: #018786;
+        }
+        .result-container {
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .verdict {
+            font-size: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .verdict.malicious {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #ff5252;
+            border-left: 5px solid #f44336;
+        }
+        .verdict.suspicious {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #ffb74d;
+            border-left: 5px solid #ff9800;
+        }
+        .verdict.clean {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #69f0ae;
+            border-left: 5px solid #4caf50;
+        }
+        .error {
+            color: #ff5252;
+            background-color: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .url-display {
+            word-break: break-all;
+            padding: 10px;
+            background-color: #2d2d2d;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .threat-details {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #2d2d2d;
+            border-radius: 6px;
+        }
+        .threat-details h3 {
+            margin-top: 0;
+            color: #bb86fc;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>URL Threat Analysis</h1>
+    <form method="post">
+        <label for="url">Enter URL to Scan</label>
+        <input type="text" name="url" required placeholder="https://example.com">
+        <button type="submit">Analyze URL</button>
+    </form>
+
+    {% if result %}
+        <div class="result-container">
+            <h2>Analysis Report</h2>
+            <div class="url-display">{{ result.url }}</div>
+            
+            {% if result.error %}
+                <div class="error">Error: {{ result.error }}</div>
+            {% elif result.status %}
+                {% if result.malicious > 0 %}
+                    <div class="verdict malicious">
+                        ⚠️ MALICIOUS THREAT DETECTED ({{ result.malicious }} vendors)
+                    </div>
+                    <div class="threat-details">
+                        <h3>Security Alert</h3>
+                        <p>This URL has been identified as malicious by {{ result.malicious }} security vendors.</p>
+                        <p>Exercise extreme caution when interacting with this link.</p>
+                    </div>
+                {% elif result.suspicious > 0 %}
+                    <div class="verdict suspicious">
+                        ⚠️ SUSPICIOUS ACTIVITY DETECTED ({{ result.suspicious }} vendors)
+                    </div>
+                    <div class="threat-details">
+                        <h3>Security Notice</h3>
+                        <p>This URL has been flagged as suspicious by {{ result.suspicious }} security vendors.</p>
+                        <p>We recommend avoiding this link unless you trust the source.</p>
+                    </div>
+                {% else %}
+                    <div class="verdict clean">
+                        ✓ URL APPEARS SAFE
+                    </div>
+                    <div class="threat-details">
+                        <h3>Security Status</h3>
+                        <p>No security vendors have flagged this URL as malicious or suspicious.</p>
+                    </div>
+                {% endif %}
+            {% endif %}
+            
+            <div class="button-container">
+                <button onclick="history.back()" class="button home-button">Go Back</button>
+            </div>
+        </div>
+    {% endif %}
+</body>
+</html>

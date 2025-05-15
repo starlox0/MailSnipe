@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #000000;
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(44, 62, 80, 0.8);
+            border-radius: 10px;
+        }
+        .hero-section h1 {
+            font-size: 2.5rem;
+            color: #bb86fc;
+            margin-bottom: 10px;
+        }
+        .hero-section p {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .header img {
+            width: 40px;
+            margin-right: 10px;
+        }
+        .upload-box {
+            border: 2px dashed #6c757d;
+            padding: 50px;
+            text-align: center;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: #2c3e50;
+        }
+        .upload-box:hover, .upload-box.dragover {
+            border-color: #bb86fc;
+            background: #34495e;
+            transform: scale(1.02);
+        }
+        .upload-box i {
+            font-size: 2rem;
+            color: #bb86fc;
+            margin-bottom: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+        }
+        .nav-tabs {
+            border-bottom: 1px solid #6c757d;
+        }
+        .file-list {
+            list-style: none;
+            padding: 0;
+        }
+        .file-list li {
+            padding: 10px;
+            border-bottom: 1px solid #6c757d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-list button {
+            margin-left: 10px;
+        }
+        .btn-analyze {
+            background-color: #fd7e14;
+            border: none;
+            color: white;
+        }
+        .btn-analyze:hover {
+            background-color: #e67e22;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .loading-spinner.active {
+            display: block;
+        }
+        /* Chatbot styles */
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px; /* Small circular button when collapsed */
+            height: 40px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .chatbot-header {
+            background-color: #007bff;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%; /* Circular shape */
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+        #chatbotIcon {
+            font-size: 1.2em; /* Larger icon for visibility */
+        }
+        .chatbot-body {
+            background-color: #2c3e50;
+            border-radius: 10px; /* Rounded rectangle when expanded */
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            width: 200px; /* Matches previous expanded width */
+            position: absolute;
+            top: auto;
+            bottom: 50px; /* Positioned above the circular button */
+            right: 0;
+        }
+        .chatbot-body.active {
+            max-height: 300px;
+            padding: 10px;
+        }
+        .chatbot-messages {
+            height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .message {
+            padding: 6px 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            max-width: 80%;
+            position: relative;
+        }
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            margin-left: auto;
+            border-radius: 10px 10px 0 10px;
+        }
+        .bot-message {
+            background-color: #34495e;
+            color: white;
+            margin-right: auto;
+            border-radius: 10px 10px 10px 0;
+        }
+        .bot-message.typing::after {
+            content: 'Typing...';
+            display: block;
+            font-size: 0.7em;
+            color: #bb86fc;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        .chatbot-input {
+            display: flex;
+            gap: 8px;
+        }
+        .chatbot-input input {
+            flex-grow: 1;
+            padding: 6px;
+            border-radius: 5px;
+            border: none;
+            background-color: #34495e;
+            color: white;
+            font-size: 0.9em;
+        }
+        .chatbot-input button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .chatbot-input button:hover {
+            background-color: #0056b3;
+        }
+        .suggested-questions {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .suggested-question {
+            background-color: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .suggested-question:hover {
+            background-color: #3d566e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://img.icons8.com/?size=100&id=104713&format=png&color=000000" alt="Email Logo">
+            <h1><span class="glitch" data-text="MailSnipe">MailSnipe</span></h1>
+        </div>
+    <!--    <p class="text-center">Analyze suspicious Emails to detect Anomalies & Malware.</p>-->
+        <div class="hero-section">
+            <h1>Protect Your Inbox</h1>
+            <p>Instantly analyze emails for threats and malware with our advanced scanner.</p>
+            <button class="btn btn-primary mt-3" onclick="document.querySelector('#file').focus()">Start Analyzing Now</button>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="fileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="true">
+                    Upload File
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="false">
+                    Uploaded Files
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content mt-3">
+            <!-- Upload File Tab -->
+            <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="upload-box" id="uploadBox">
+                        <i class="fa-solid fa-upload"></i>
+                        <p>Drag & Drop your .eml file here</p>
+                        <input type="file" name="file" id="file" class="form-control" accept=".eml" required data-bs-toggle="tooltip" data-bs-placement="top" title="Select a .eml file to analyze for threats">
+                        <button type="submit" class="btn btn-primary mt-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Upload and start analysis">Upload File</button>
+                    </div>
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Processing your file...</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Uploaded Files Tab -->
+            <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="files-tab">
+                <h3>Uploaded Files</h3>
+                <ul class="file-list">
+                    {% for file in files %}
+                        <li>
+                            <i class="fa-solid fa-file me-2"></i>{{ file }}
+                            <div>
+                                <form action="/delete" method="post" style="display:inline;">
+                                    <input type="hidden" name="filename" value="{{ file }}">
+                                    <button type="submit" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete this file">Delete</button>
+                                </form>
+                                <form action="{{ url_for('analyze_file', filename=file) }}" method="get" style="display:inline;">
+                                    <button type="submit" class="btn btn-analyze btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Analyze this file for threats">Analyze</button>
+                                </form>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li>No files uploaded yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-container">
+        <div class="chatbot-header" id="chatbotToggle">
+            <span id="chatbotIcon">+</span>
+        </div>
+        <div class="chatbot-body" id="chatbotBody">
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot-message">
+                    Hello! I'm your Email Analyzer assistant. How can I help you?
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="userMessage" placeholder="Type your question...">
+                <button id="sendMessage">Send</button>
+            </div>
+            <div class="suggested-questions">
+                <div class="suggested-question">How do I upload a file?</div>
+                <div class="suggested-question">How do I delete a file?</div>
+                <div class="suggested-question">How does the analysis work?</div>
+                <div class="suggested-question">How to download file as XML?</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            // Drag and drop for upload box
+            const uploadBox = document.getElementById('uploadBox');
+            uploadBox.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadBox.classList.add('dragover');
+            });
+            uploadBox.addEventListener('dragleave', () => {
+                uploadBox.classList.remove('dragover');
+            });
+            uploadBox.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadBox.classList.remove('dragover');
+                const fileInput = document.getElementById('file');
+                fileInput.files = e.dataTransfer.files;
+            });
+
+            // Show loading spinner on form submit
+            const uploadForm = document.getElementById('uploadForm');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            uploadForm.addEventListener('submit', () => {
+                loadingSpinner.classList.add('active');
+            });
+
+            // Chatbot functionality
+            const chatbotToggle = document.getElementById('chatbotToggle');
+            const chatbotBody = document.getElementById('chatbotBody');
+            const chatbotIcon = document.getElementById('chatbotIcon');
+            const chatbotMessages = document.getElementById('chatbotMessages');
+            const userMessageInput = document.getElementById('userMessage');
+            const sendButton = document.getElementById('sendMessage');
+            const suggestedQuestions = document.querySelectorAll('.suggested-question');
+
+            // Toggle chatbot visibility
+            chatbotToggle.addEventListener('click', function() {
+                chatbotBody.classList.toggle('active');
+                chatbotIcon.textContent = chatbotBody.classList.contains('active') ? '−' : '+';
+            });
+
+            // Send message function
+            function sendMessage() {
+                const message = userMessageInput.value.trim();
+                if (message) {
+                    addMessage(message, 'user');
+                    userMessageInput.value = '';
+                    processUserMessage(message);
+                }
+            }
+
+            // Send message on button click
+            sendButton.addEventListener('click', sendMessage);
+
+            // Send message on Enter key
+            userMessageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Suggested questions click handler
+            suggestedQuestions.forEach(question => {
+                question.addEventListener('click', function() {
+                    const questionText = this.textContent;
+                    userMessageInput.value = questionText;
+                    sendMessage();
+                });
+            });
+
+            // Add message to chat
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+                messageDiv.textContent = text;
+                chatbotMessages.appendChild(messageDiv);
+                chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            }
+
+            // Process user message and get bot response
+            function processUserMessage(message) {
+                const lowerMessage = message.toLowerCase();
+                const responses = {
+                    "hello": "Hello! How can I assist you with email analysis?",
+                    "hi": "Hello! How can I assist you with email analysis?",
+                    "how do i upload a file?": "Click on the 'Upload' tab, select a .txt.eml file, and click the Upload File button.",
+                    "how do i delete a file?": "Go to the 'Uploaded Files' tab, find your file in the list, and click the Delete button next to it.",
+                    "how does the analysis work?": "The system runs an external script to analyze email content for potential threats and anomalies.",
+                    "how to download file as xml": "In the 'Uploaded Files' tab, click the Analyze button first, then you'll see an option to download as XML.",
+                    "what is a malicious attachment?": "A malicious attachment is a file included in an email that contains harmful software like viruses, ransomware, or trojans, often disguised as legitimate documents.",
+                    "what is dmarc header?": "The DMARC (Domain-based Message Authentication, Reporting, and Conformance) header helps prevent email spoofing by indicating how to handle emails that fail SPF or DKIM checks.",
+                    "what is spf header?": "The SPF (Sender Policy Framework) header verifies if the sending mail server is authorized to send emails on behalf of the domain, helping detect spoofed emails.",
+                    "what is dkim header?": "DKIM (DomainKeys Identified Mail) adds a digital signature to emails, allowing the receiver to verify the email was sent by the domain and that it wasn't altered.",
+                    "what is phishing email?": "A phishing email is a fraudulent message designed to trick recipients into revealing sensitive information like passwords or installing malware.",
+                    "default": "I'm sorry, I didn't understand that. Try asking about file uploads, analysis, or downloads."
+                };
+
+                let response = responses.default;
+                for (const [question, answer] of Object.entries(responses)) {
+                    if (lowerMessage.includes(question)) {
+                        response = answer;
+                        break;
+                    }
+                }
+
+                // Show typing animation
+                const typingDiv = document.createElement('div');
+                typingDiv.classList.add('message', 'bot-message', 'typing');
+                chatbotMessages.appendChild(typingDiv);
+                chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+
+                // Simulate typing delay and show response
+                setTimeout(() => {
+                    chatbotMessages.removeChild(typingDiv);
+                    addMessage(response, 'bot');
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
